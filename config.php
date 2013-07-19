@@ -18,6 +18,7 @@ if(!defined("_H_CONFIG_H_"))
 			"umail/table" => "umail",
 			
 			"activation/delete" => 2, //Ennyi nap után törlődnek a nem aktivált regisztrációk
+			"newmail/backup" => 1, //Ennyi nap után állítjuk vissza a nem aktivált e-mail címeket az eredeti értékre
 			"mail/sendermail"  => "cities@t-bond.hu", //Innen küldjük az üzenetet
 			"mail/sender" => "Fejlesztői csapat", //Küldő neve
 			
@@ -39,7 +40,7 @@ if(!defined("_H_CONFIG_H_"))
 									Jó szórakozást kíván,<br />
 										A fejlesztői csapat.
 									<hr>
-									Ezt a levelet azért kaptad, mert valaki a te e-mail címeddel regisztrált.<br />
+									Ezt a levelet azért kaptad, mert valaki a Te e-mail címeddel regisztrált.<br />
 									Ha nem te voltál, akkor kérlek hagyd figyelmen kívül ezt az üzenetet.<br />
 									A regisztráció {DELETE_DAY} nap múlva ({DELETE_HOUR} óra) törlésre kerül, ha nem aktiválod.<br />
 									Utána ez az e-mail cím, valamint felhasználónév felszabadul az adatbázisunkból.<br />
@@ -50,7 +51,7 @@ if(!defined("_H_CONFIG_H_"))
 			"changepassword/content" => 'Kedves {USERNAME}!<br />
 										<br />
 										A jelszavad megváltozott.<br />
-										Ha nem te kérted a jelszóváltoztatást, akkor kérjük vedd fel a kapcsolatot a Support-al.<br />
+										Ha nem Te kérted a jelszóváltoztatást, akkor kérjük vedd fel a kapcsolatot a Support-al.<br />
 										<br />
 										Ez egy autómágikusan generált üzenet, kérjük ne válaszolj rá.', //Megváltozott jelszó: {USERNAME}=Felhasználónév
 
@@ -58,10 +59,26 @@ if(!defined("_H_CONFIG_H_"))
 			"changemail/content" => 'Kedves {USERNAME}!<br />
 										<br />
 										Az e-mail címed megváltozott.<br />
-										Ha nem te kérted ezt a változtatást, akkor kérjük vedd fel a kapcsolatot a Support-al.<br />
+										Ha nem Te kérted ezt a változtatást, akkor kérjük vedd fel a kapcsolatot a Support-al.<br />
 										<br />
-										Ez egy autómágikusan generált üzenet, kérjük ne válaszolj rá.' //Megváltozott mail: {USERNAME}=Felhasználónév
-										
+										Ez egy autómágikusan generált üzenet, kérjük ne válaszolj rá.', //Megváltozott mail: {USERNAME}=Felhasználónév
+			
+			"newmail/subject" => "Megváltozott e-mail cím.", //Új mail tárgya
+			"newmail/content" => 'Kedves {USERNAME}!<br />
+									<br />
+									A felhasználói azonosítódhoz tartozó e-mail címet megváltoztatták.<br />
+									Ez az elektronikus levéllel tudod igazolni, hogy Te vagy a postaláda tulajdonosa.
+									<hr>
+									Kód az aktivációhoz: <i>{ACTIVATION_CODE}</i><br />
+									Aktivációs linked: <a href="{ACTIVATION_LINK}" target="_blank" link="Aktiváció">Aktiváció</a><br />
+									(Ha a link nem működne, másold a böngésződ címsorába a következőt: {ACTIVATION_LINK} )<br />
+									<hr>
+									Ezt a levelet azért kaptad, mert valaki a Te e-mail címedet adta meg.<br />
+									Ha nem te voltál, akkor kérlek vedd fel a kapcsolatot a Support-al.<br />
+									A változtatás {CHANGE_DAY} nap múlva ({CHANGE_HOUR} óra) visszaállításra kerül, ha nem aktiválod.<br />
+									Utána a régi e-mail címed lesz újra az azonosítód.<br />
+									<br />
+									Ez egy autómágikusan generált üzenet, kérjük ne válaszolj rá.' //Új mail mail: {USERNAME}=Felhasználónév, {ACTIVATION_LINK}=Aktivációs link elérése, {ACTIVATION_CODE}=Aktivációs kód, {CHANGE_DAY}=Visszaállítási határidő (nap), {CHANGE_HOUR}=Visszaállítási határidő (óra)
 		);
 
 	$mysqli=new mysqli($config["sql/host"], $config["sql/user"], $config["sql/pass"], $config["sql/database"]);

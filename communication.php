@@ -270,12 +270,13 @@ switch((int)$_POST["t"]) {
 		if($_POST["p"]!="" and $_POST["p"]!="d41d8cd98f00b204e9800998ecf8427e" and $_POST["p"] != $users["pass"] and $_POST["s"]!=1)
 			if(!mail($_POST["m"],$config["changepassword/subject"],strtr($config["changepassword/content"], array('{USERNAME}' =>  $_POST["u"])),'MIME-Version: 1.0' . "\r\n".'Content-type: text/html; charset=utf-8' . "\r\n".'From: '.$config["mail/sender"].' <'.$config["mail/sendermail"].'>' . "\r\n")){$mysqli->close(); die(isset($_POST["g"])?"A jelszóváltoztatásról szóló e-mail elküldése nem sikerült.":"-45");} //Sikertelen email küldés
 		if((string)$_POST["s"]=="1") {
-			$_POST["p"]=substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),0,10);//Véletlen kód (10 karakter)
 			$_CODE=substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),0,8);//Véletlen kód (8 karakter)
 			if(!isset($_SERVER['HTTPS'])){$_SERVER['HTTPS']='off';} //It was also missing HTTPS. Probably just a localhost-issue, but here's a cheap fix anyway
-			if($users["mail"]!=$_POST["m"])mail($users["mail"],$config["changemail/subject"],strtr($config["changemail/content"], array('{USERNAME}' =>  $_POST["u"])),'MIME-Version: 1.0' . "\r\n".'Content-type: text/html; charset=utf-8' . "\r\n".'From: '.$config["mail/sender"].' <'.$config["mail/sendermail"].'>' . "\r\n");
-			if(!mail($_POST["m"],$config["activation/subject"],strtr($config["activation/content"], array('{USERNAME}' =>  $_POST["u"], '{ACTIVATION_LINK}'=>($_SERVER['HTTPS']=='on'?'https://':'http://').$_SERVER['SERVER_NAME']."/index.php?a=".md5($_CODE)."&i=".($users["id"]),'{ACTIVATION_CODE}' =>  $_CODE,'{PASSWORD}' => $_POST["p"], '{DELETE_DAY}' => $config["activation/delete"], '{DELETE_HOUR}' => $config["activation/delete"]*24)),'MIME-Version: 1.0' . "\r\n".'Content-type: text/html; charset=utf-8' . "\r\n".'From: '.$config["mail/sender"].' <'.$config["mail/sendermail"].'>' . "\r\n")){$mysqli->close(); die(isset($_POST["g"])?"Az e-mail elküldése nem sikerült.":"-46");} //Sikertelen email küldés
-			$_POST["p"]=md5($_POST["p"]);
+			if($users["mail"]!=$_POST["m"]) {
+				mail($users["mail"],$config["changemail/subject"],strtr($config["changemail/content"], array('{USERNAME}' =>  $_POST["u"])),'MIME-Version: 1.0' . "\r\n".'Content-type: text/html; charset=utf-8' . "\r\n".'From: '.$config["mail/sender"].' <'.$config["mail/sendermail"].'>' . "\r\n");
+				$users["data"]["old_mail"] = $users["mail"];
+			}
+			if(!mail($_POST["m"],$config["newmail/subject"],strtr($config["newmail/content"], array('{USERNAME}' =>  $_POST["u"], '{ACTIVATION_LINK}'=>($_SERVER['HTTPS']=='on'?'https://':'http://').$_SERVER['SERVER_NAME']."/index.php?a=".md5($_CODE)."&i=".($users["id"]),'{ACTIVATION_CODE}' =>  $_CODE, '{CHANGE_DAY}' => $config["newmail/backup"], '{CHANGE_HOUR}' => $config["newmail/backup"]*24)),'MIME-Version: 1.0' . "\r\n".'Content-type: text/html; charset=utf-8' . "\r\n".'From: '.$config["mail/sender"].' <'.$config["mail/sendermail"].'>' . "\r\n")){$mysqli->close(); die(isset($_POST["g"])?"Az e-mail elküldése nem sikerült.":"-46");} //Sikertelen email küldés
 		}
 		$users["username"]=$_POST["u"];
 		$users["realname"]=$_POST["rn"];
