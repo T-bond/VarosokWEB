@@ -20,6 +20,7 @@ body{
 .Javascript { 
 	overflow:auto;
 	padding-bottom: 83px;
+	display: none; /*Elrejtjük a tartalmat. Ha van javascript az majd megjeleníti. */
 }
 /*
 Alul az a fasz, lábrész vagy wut
