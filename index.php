@@ -29,9 +29,10 @@ if(isset($_SESSION["ID"])){$_SESSION["USER"]=$Userman->get("`id`='".$mysqli->esc
 			$(container).not(item).slideUp('slow'); 
 			$(item).slideDown('slow');
 		};
-		
+		document.cookie="COOKIE_ENABLED";
 		$(document).ready(function(){
 			$('.Javascript').show('fast');
+			if(document.cookie.indexOf("COOKIE_ENABLED")==-1)$('#Cookies_Disabled').show('fast');
 		<?php if(isset($_SESSION["ID"])){ ?>
 			<?php if($_SESSION["USER"]["status"]==5){ ?>
 			Ranks=new Array('Tiltott felhasználó','Aktiválatlan felhasználó','Felhasználó','Moderátor','Fejlesztő','Adminisztrátor');
@@ -163,11 +164,12 @@ if(isset($_SESSION["ID"])){$_SESSION["USER"]=$Userman->get("`id`='".$mysqli->esc
 					</div>
 					<div id="Login" class="page" style="display: none;">
 						<form id="Login_Form" onSubmit="if($('#Login_Email').val()=='' || $('#Login_Password').val()=='')$('#Login_Error').addClass('error').removeClass('ok').html('Minden mező kitöltése kötelező!'); else if(!isValidEmailAddress($('#Login_Email').val()))$('#Login_Error').addClass('error').removeClass('ok').html('Érvénytelen e-mail!'); else{$('#Login_Form').children('input').attr('disabled',true); $('#Login_Error').removeClass('error').removeClass('ok').html('Kis türelmet...'); $.post('communication.php',{t: 1, m: $('#Login_Email').val(), p: $.md5($('#Login_Password').val()), g: null, d: null},function(r){if(r=='1'){$('#Login_Error').addClass('ok').removeClass('error').html('Sikeres bejelentkezés. Átirányítás folyamatban...'); location.href='<?php echo basename( __FILE__ ); ?>';}else{$('#Login_Error').addClass('error').removeClass('ok').html(r);} $('#Login_Form').children('input').attr('disabled',false);});} return false;">
+							<h3 style="color: Red; display: none; border: dotted; border-color: Red;" id="Cookies_Disabled">Kérjük engedélyezd a cookie-kat, mert a belépéshez szükségesek.</h3>
 							<div id="Login_Error"></div>
 							<label for="Login_Email">E-mail</label>: <input type="Email" placeholder="E-mail" id="Login_Email" required="required" autocomplete="off" autofocus="autofocus" maxlength="32" /><br>
 							<label for="Login_Password">Jelszó</label>: <input type="Password" placeholder="Jelszó" id="Login_Password" required="required" autocomplete="off" maxlength="32" /><br>
 							<input type="Submit" value="Bejelentkezés" />
-						</form>
+						</form>						
 					</div>
 					<div id="Register" class="page"<?php echo (!isset($_GET["i"]))?' style="display: none;"':''?>>
 						<form id="Register_Form" onSubmit="if($('#Register_Email').val()=='')$('#Register_Error').addClass('error').removeClass('ok').html('Minden mező kitöltése kötelező!'); else if(!isValidEmailAddress($('#Register_Email').val()))$('#Register_Error').addClass('error').removeClass('ok').html('Érvénytelen e-mail!'); else $.post('communication.php',{t: 2, m: $('#Register_Email').val(), g: null},function(r){if(r=='1'){$('#Register_Error').addClass('ok').removeClass('error').html('A regisztráció sikeres.'); $('#Register_Email').val(''); }else $('#Register_Error').addClass('error').removeClass('ok').html(r); $('#Register_Form').children('input').attr('disabled',false);}); return false;">

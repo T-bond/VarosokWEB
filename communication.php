@@ -6,6 +6,7 @@ if(!isset($_POST["t"]))$_POST=$_GET;
 if(!isset($_POST["t"]))die(isset($_POST["g"])?"Hiányzó paraméter.":"-1"); //Hiányzó paraméter
 require_once("config.php");
 $config["users/table_escaped"]=ensql($config["users/table"]);
+if(!isset($_SERVER['HTTPS'])){$_SERVER['HTTPS']='off';} //It was also missing HTTPS. Probably just a localhost-issue, but here's a cheap fix anyway
 switch((int)$_POST["t"]) {
 	case 1: //Belépés
 		if(!isset($_POST["m"]) || !isset($_POST["p"])){$mysqli->close(); die(isset($_POST["g"])?"Hiányzó paraméter!":"-3");} //Hiányzó paraméter (mail v jelszó)
@@ -51,14 +52,13 @@ switch((int)$_POST["t"]) {
 		}
 		break;
 	case 2: //Regisztráció
-		if(!isset($_SERVER['HTTPS'])){$_SERVER['HTTPS']='off';} //It was also missing HTTPS. Probably just a localhost-issue, but here's a cheap fix anyway
 		if(!isset($_POST["m"])){$mysqli->close(); die(isset($_POST["g"])?"Hiányzó paraméter!":"-11");} //Hiányzó paraméter (név v jelszó v mail)
 		if($_POST["m"]===""){$mysqli->close(); die(isset($_POST["g"])?"Üres e-mail cím.":"-12");} //Üres mail
 		if(!filter_var($_POST["m"], FILTER_VALIDATE_EMAIL)){$mysqli->close(); die(isset($_POST["g"])?"Az e-mail cím érvénytelen.":"-16");} //Érvénytelen mail
 		if($mysqli->query("SELECT `id` FROM `".$config["users/table_escaped"]."` WHERE `mail`='".ensql($_POST["m"])."'")->num_rows>0){$mysqli->close(); die(isset($_POST["g"])?"Ez az e-mail cím már foglalt.":"-18");} //Foglalt mail
 		$_PASSWORD=substr(str_shuffle(str_repeat('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',10)),0,10);//Véletlen kód (10 karakter)
 		$_CODE=substr(str_shuffle(str_repeat('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',8)),0,8);//Véletlen kód (8 karakter)
-		if(!$mysqli->query("INSERT INTO `".$config["users/table_escaped"]."` (`id`, `username`, `pass`, `mail`, `added`, `data`, `status`) VALUES (NULL, '".ensql("NEW_USER_".substr(str_shuffle(str_repeat('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',3)),0,3))."', '".ensql(md5($_PASSWORD))."', '".ensql($_POST["m"])."', NOW(), 'acst:".date("Y-m-d h:i:s")."|activation_code:".$_CODE."', '1')")){$mysqli->close(); die(isset($_POST["g"])?"A regisztráció nem sikerült.":"-19");} //Hiba a hozzáadásban
+		if(!$mysqli->query("INSERT INTO `".$config["users/table_escaped"]."` (`id`, `username`, `pass`, `mail`, `added`, `data`, `status`) VALUES (NULL, '".ensql("NEW_USER_".substr(str_shuffle(str_repeat('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',3)),0,3))."', '".ensql(md5($_PASSWORD))."', '".ensql($_POST["m"])."', NOW(), 'acst:".date("Y-m-d H:i:s")."|activation_code:".$_CODE."', '1')")){$mysqli->close(); die(isset($_POST["g"])?"A regisztráció nem sikerült.":"-19");} //Hiba a hozzáadásban
 		$_ID=$mysqli->insert_id;
 		$mysqli->query("UPDATE `".$config["users/table_escaped"]."` SET `username`= '".ensql("NEW_USER_".$_ID)."' WHERE `id`='".$_ID."';");
 		if(!mail($_POST["m"],$config["activation/subject"],strtr($config["activation/content"], array('{USERNAME}' =>  "NEW_USER_".$_ID, '{PASSWORD}' =>  $_PASSWORD, '{ACTIVATION_LINK}'=>($_SERVER['HTTPS']=='on'?'https://':'http://').$_SERVER['SERVER_NAME']."/index.php?a=".md5($_CODE)."&i=".$_ID,'{ACTIVATION_CODE}' =>  $_CODE, '{DELETE_DAY}' => $config["activation/delete"], '{DELETE_HOUR}' => $config["activation/delete"]*24)),'MIME-Version: 1.0' . "\r\n".'Content-type: text/html; charset=utf-8' . "\r\n".'From: '.$config["mail/sender"].' <'.$config["mail/sendermail"].'>' . "\r\n")){$mysqli->close(); die(isset($_POST["g"])?"Az e-mail elküldése nem sikerült.":"-20");} //Sikertelen email küldés
@@ -69,50 +69,50 @@ switch((int)$_POST["t"]) {
 		if(!isset($_POST["a"]) || (!isset($_POST["i"]) && !isset($_POST["m"]))){$mysqli->close(); die(isset($_POST["g"])?"Hiányzó paraméter!":"-21");} //Hiányzó paraméter ((id és mail) v kód)
 		if($_POST["a"]=="" or ($_POST["i"]=="" and $_POST["m"]=="")){$mysqli->close(); die(isset($_POST["g"])?"Üres azonosító vagy aktivációs kód.":"-22");} //Üres (azonosító és mail) vagy aktivációs kód
 		if(!preg_match('/[a-zA-Z0-9_-]{3,32}/', $_POST["a"])){$mysqli->close(); die(isset($_POST["g"])?"Az aktivációs kód nem a megfelelő formátumú.":"-23");} //Nem md5 formátumú a kód
-		if($_POST["m"]!="" and (!isset($_POST["i"]) or $_POST["i"]=="")) {
-			$_POST["i"]=$mysqli->query("SELECT `id` FROM `".$config["users/table_escaped"]."` WHERE `mail`='".ensql($_POST["m"])."'");
-			if($_POST["i"]->num_rows!=1)
-				$_POST["i"]=0;
+		include("modules/users.php");
+		$users=CUsers::getInstance();
+		if($_POST["m"]!="" and (!isset($_POST["i"]) or $_POST["i"]==""))
+			$user=$users->get("`mail`='".ensql($_POST["m"])."'");
 				else
-				$_POST["i"]=$_POST["i"]->fetch_object()->id;
-		}
-		$_ID=ensql($_POST["i"]);
-		$_QUERY=$mysqli->query("SELECT `status`, `data` FROM `".$config["users/table_escaped"]."` WHERE id='".$_ID."'");
-		$_RESULT=$_QUERY->fetch_object();	
-		if($_QUERY->num_rows!=1) {
-			$_QUERY->close();
+				$user=$users->get("id='".$_POST["i"]."'");
+		if(count($user)!=1) {
 			$mysqli->close();
 			die(isset($_POST["g"])?"Ez a felhasználó nem létezik.":"-24"); //Nincs ilyen azonosító
 				}else{
-				$_QUERY->close();
-				if($_RESULT->status!='1') {
+				$user=$user[0];
+				if($user["status"]!='1' and !isset($user["data"]["newmail"])) {
 					$mysqli->close();
 					die(isset($_POST["g"])?"A felhasználó már aktiválva van.":"-25"); //Már aktiválva van.
 						}else
-						if(substr_count($_RESULT->data,"activation_code:")!=1) {
+						if(!isset($user["data"]["activation_code"])) {
 							$mysqli->close();
 							die(isset($_POST["g"])?"Nincs aktivációs kód az adatbázisban.":"-26"); //Hiányzó kód
 							}else{
-							$_CODE=explode("|",$_RESULT->data);
-							foreach($_CODE as $key=>$val) {
-								if(substr_count($val, "acst:")==1)
-									unset($_CODE[$key]);
-								if(substr_count($val, "activation_code:")==1) {
-									unset($_CODE[$key]);
-									$CODE=substr($val, strlen("activation_code:"));
-								}
-							}
-							if(md5($CODE)!=$_POST["a"]) {
+							if(md5($user["data"]["activation_code"])!=$_POST["a"]) {
 								$mysqli->close();
 								die(isset($_POST["g"])?"Az aktivációs kód hibás.":"-26"); //Nem jó az azonosító
 									}else{
-									$_CODE=implode("|",$_CODE);
-									if($mysqli->query("UPDATE `".$config["users/table_escaped"]."` SET `status`= '2', `data`='".$_CODE."' WHERE `id`='".$_ID."';"))
-										die("1"); //Aktiváció OK
-											else{
-											$mysqli->close();
-											die(isset($_POST["g"])?"Az aktiváció nem sikerült.":"-27"); //Nem sikerült aktiválni
+									if(isset($user["data"]["newmail"])){
+										if(isset($user["data"]["nms"])) {
+											$user["data"]["old_mail"] = $user["mail"];
+											$user["mail"] = $user["data"]["newmail"];
+											unset($user["data"]["nms"]);
+											unset($user["data"]["nmt"]);
+											unset($user["data"]["newmail"]);
+											unset($user["data"]["activation_code"]);
+											}else{
+											$user["data"]["nms"] = 1;
+											$user["data"]["nmt"] = date("Y-m-d H:i:s");
+											$user["data"]["activation_code"]=substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),0,8);//Véletlen kód (8 karakter)
+											if(!mail($user["data"]["newmail"],$config["newmail/subject"],strtr($config["newmail/content"], array('{USERNAME}' =>  $user["username"], '{ACTIVATION_LINK}'=>($_SERVER['HTTPS']=='on'?'https://':'http://').$_SERVER['SERVER_NAME']."/index.php?a=".md5($user["data"]["activation_code"])."&i=".($user["id"]),'{ACTIVATION_CODE}' =>  $user["data"]["activation_code"], '{CHANGE_DAY}' => $config["newmail/backup"], '{CHANGE_HOUR}' => $config["newmail/backup"]*24)),'MIME-Version: 1.0' . "\r\n".'Content-type: text/html; charset=utf-8' . "\r\n".'From: '.$config["mail/sender"].' <'.$config["mail/sendermail"].'>' . "\r\n")){$mysqli->close(); die(isset($_POST["g"])?"Az e-mail elküldése nem sikerült.":"-26.4");} //Sikertelen email küldés
+											}
+									}else{
+									unset($user["data"]["activation_code"]);
+									unset($user["data"]["acst"]);
+									$user["status"] = 2;
 									}
+									if(!$users->update($user)){$mysqli->close(); die(isset($_POST["g"])?"Az aktiválás nem sikerült.":"-27");}
+									die("1"); //Aktiváció OK
 								}
 							}
 		}
@@ -143,7 +143,7 @@ switch((int)$_POST["t"]) {
 		<div id="Edit_User_Error"></div>
 		<form id="Edit_User_Form" onSubmit="if($('#Edit_Username').val()=='' || $('#Edit_Email').val()=='')$('#Edit_User_Error').addClass('error').removeClass('ok').removeClass('waiting').html('Minden mező kitöltése kötelező!'); else if(!isValidEmailAddress($('#Edit_Email').val()))$('#Edit_User_Error').addClass('error').removeClass('ok').removeClass('waiting').html('Érvénytelen e-mail!'); else if(!$('#Edit_Username').val().match('[a-zA-Z0-9_-]{3,}'))$('#Edit_User_Error').addClass('error').removeClass('ok').removeClass('waiting').html('A felhasználónév nem megfelelő!'); else{$('#Edit_User_Form').children('input').attr('disabled',true); if($('#Edit_Rank_Select').val()=='0'){if($('#Ban_Infinite').is(':checked'))BT=''; else BT=$('#Ban_End_Input').val(); B=$('#Ban_Description').val();}else{BT=''; B='';} $('#Edit_User_Error').removeClass('error').removeClass('ok').addClass('waiting').html('Kommunikáció a szerverrel...'); $.post('communication.php',{t: 14, i: <?php echo $users["id"]; ?>, u: $('#Edit_Username').val(), rn: $('#Edit_Realname').val(), m: $('#Edit_Email').val(), p: $.md5($('#Edit_Password').val()), s: $('#Edit_Rank_Select').val(), des: $('#Edit_Description').val(), b: B, bt: BT, g: null},function(r){if(r=='1'){$('#Edit_User_Error').addClass('ok').removeClass('error').removeClass('waiting').html('A módosítás sikeres.');}else{$('#Edit_User_Error').addClass('error').removeClass('ok').removeClass('waiting').html(r);} $('#Edit_User_Form').children('input').attr('disabled',false);});} return false;">
 			<table class="user_data_editor">
-				<tr><td>Felhasználónév:</td><td><input type="Text" value="<?php echo $users["username"]; ?>" placeholder="Felhasználónév" id="Edit_Username" required="required" autocomplete="off" maxlength="32" pattern="[a-zA-Z0-9-_]{3,32}" title="Minimum 3 karakter. Csak betűket számokat valamint a következő speciális karaktereket használhatod: ,,- és _ ''" /></td></tr>
+				<tr><td>Felhasználónév:<sup><a href="javascript:void(0);" title="Visszaállít" onClick="$('#Edit_Username').val('<?php echo "NEW_USER_".$users["id"]; ?>');">x</a></sup></td><td><input type="Text" value="<?php echo $users["username"]; ?>" placeholder="Felhasználónév" id="Edit_Username" required="required" autocomplete="off" maxlength="32" pattern="[a-zA-Z0-9-_]{3,32}" title="Minimum 3 karakter. Csak betűket számokat valamint a következő speciális karaktereket használhatod: ,,- és _ ''" /></td></tr>
 				<tr><td>Valódi név:</td><td><input type="Text" value="<?php echo $users["realname"]; ?>" placeholder="Valódi neve" id="Edit_Realname" autocomplete="off" /></td></tr>
 				<tr><td>E-mail:</td><td><input type="Email" value="<?php echo $users["mail"]; ?>" placeholder="E-mail" id="Edit_Email" required="required" autocomplete="off" maxlength="32" onKeyUp="$(this).change();" onChange="if(this.value!='<?php echo $users["mail"]; ?>'){$('#Edit_Rank_Select').val('1'); $('#Edit_Pass_tr').hide('fast');}" /></td></tr>		
 				<tr id="Edit_Pass_tr"<?php echo $users["status"]==1?' style="display: none;"':''; ?>><td>Új jelszó:</td><td><input type="Password" placeholder="Új jelszó" id="Edit_Password" autocomplete="off" maxlength="32" /></td></tr>
@@ -271,7 +271,6 @@ switch((int)$_POST["t"]) {
 			if(!mail($_POST["m"],$config["changepassword/subject"],strtr($config["changepassword/content"], array('{USERNAME}' =>  $_POST["u"])),'MIME-Version: 1.0' . "\r\n".'Content-type: text/html; charset=utf-8' . "\r\n".'From: '.$config["mail/sender"].' <'.$config["mail/sendermail"].'>' . "\r\n")){$mysqli->close(); die(isset($_POST["g"])?"A jelszóváltoztatásról szóló e-mail elküldése nem sikerült.":"-45");} //Sikertelen email küldés
 		if((string)$_POST["s"]=="1") {
 			$_CODE=substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),0,8);//Véletlen kód (8 karakter)
-			if(!isset($_SERVER['HTTPS'])){$_SERVER['HTTPS']='off';} //It was also missing HTTPS. Probably just a localhost-issue, but here's a cheap fix anyway
 			if($users["mail"]!=$_POST["m"]) {
 				mail($users["mail"],$config["changemail/subject"],strtr($config["changemail/content"], array('{USERNAME}' =>  $_POST["u"])),'MIME-Version: 1.0' . "\r\n".'Content-type: text/html; charset=utf-8' . "\r\n".'From: '.$config["mail/sender"].' <'.$config["mail/sendermail"].'>' . "\r\n");
 				$users["data"]["old_mail"] = $users["mail"];
@@ -285,7 +284,10 @@ switch((int)$_POST["t"]) {
 			$users["pass"]=$_POST["p"];
 		if((string)$_POST["s"]=="1") {
 			$users["data"]["activation_code"]=$_CODE;
-			$users["data"]["acst"]=date("Y-m-d h:i:s");
+			$users["data"]["acst"]=date("Y-m-d H:i:s");
+			unset($users["data"]["newmail"]);
+			unset($users["data"]["nmt"]);
+			unset($users["data"]["nms"]);
 		}
 		if($_POST["des"]=="")
 			unset($users["data"]["des"]);
@@ -300,6 +302,39 @@ switch((int)$_POST["t"]) {
 		}
 		$users["status"]=$_POST["s"];
 		if(!$user->update($users)){$mysqli->close(); die(isset($_POST["g"])?"A frissítés nem sikerült.":"-47");}
+		$mysqli->close();
+		die("1");
+		break;
+	case 15: //Felhasználó profil módosítása (Felhasználó)
+		if(!isset($_SESSION["ID"]) or $_SESSION["USER"]["status"]==5){$mysqli->close(); die(isset($_POST["g"])?"Azonosítatlan felhasználó, vagy rossz felhasználói szint.":"-48");}
+		if($_POST["m"]==="" or $_POST["p"]==="" or $_POST["u"]===""){$mysqli->close(); die(isset($_POST["g"])?"A felhasználónév, e-mail és/vagy a jelszó üres.":"-49");} //Üres user, mail vagy jelszó
+		if(!preg_match('/[a-zA-Z0-9_-]{3,32}/', $_POST["p"])){$mysqli->close(); die(isset($_POST["g"])?"A jelszó nincs titkosítva.":"-50");} //Nem md5 formátumú a jelszó
+		if(!preg_match('/[a-zA-Z0-9_-]{3,32}/', $_POST["m"])){$mysqli->close(); die(isset($_POST["g"])?"A felhasználónév nem megfelelő.":"-51");} //Nem md5 formátumú a jelszó
+		if(!filter_var($_POST["m"], FILTER_VALIDATE_EMAIL)){$mysqli->close(); die(isset($_POST["g"])?"Az e-mail cím érvénytelen.":"-52");} //Érvénytelen mail
+		include("modules/users.php");
+		$user=CUsers::getInstance();
+		$users=$user->get("`id`='".ensql($_SESSION["ID"])."'");
+		$profile=$users[0];
+		if($profile["pass"]!=$_POST["p"]){$mysqli->close(); die(isset($_POST["g"])?"Hibás jelszó.":"-53");} //Rossz jelszó
+		if($profile["username"]=="NEW_USER_".$profile["id"] and $_POST["u"]!=$profile["username"]) {
+			if(count($user->get("`username`='".ensql($_POST["u"])."' AND `id`!='".ensql($_SESSION["ID"])."'"))>0){$mysqli->close(); die(isset($_POST["g"])?"Ez a felhasználónév már foglalt.":"-54");} //Foglalt username
+			$profile["username"]=$_POST["u"];
+		}
+		if($_POST["m"]!=$profile["mail"] and !isset($profile["data"]["newmail"])) {
+			if(count($user->get("`mail`='".ensql($_POST["m"])."' AND `id`!='".ensql($_SESSION["ID"])."'"))>0){$mysqli->close(); die(isset($_POST["g"])?"Ez az e-mail cím már foglalt.":"-55");} //Foglalt mail
+			$profile["data"]["newmail"] = $_POST["m"];
+			$profile["data"]["nmt"] = date("Y-m-d H:i:s");
+			$_CODE=substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),0,8);//Véletlen kód (8 karakter)
+			$profile["data"]["activation_code"] = $_CODE;
+			if(!mail($profile["mail"],$config["newmail2/subject"],strtr($config["newmail2/content"], array('{USERNAME}' =>  $_POST["u"], '{ACTIVATION_LINK}'=>($_SERVER['HTTPS']=='on'?'https://':'http://').$_SERVER['SERVER_NAME']."/index.php?a=".md5($_CODE)."&i=".($profile["id"]),'{ACTIVATION_CODE}' =>  $_CODE, '{CHANGE_DAY}' => $config["newmail/backup"], '{CHANGE_HOUR}' => $config["newmail/backup"]*24)),'MIME-Version: 1.0' . "\r\n".'Content-type: text/html; charset=utf-8' . "\r\n".'From: '.$config["mail/sender"].' <'.$config["mail/sendermail"].'>' . "\r\n")){$mysqli->close(); die(isset($_POST["g"])?"Az e-mail elküldése nem sikerült.":"-56");} //Sikertelen email küldés
+			
+		}
+		if($_POST["np"]!="" and $_POST["np"]!="d41d8cd98f00b204e9800998ecf8427e" and $_POST["np"] != $profile["pass"]) {
+			mail($profile["mail"],$config["changepassword/subject"],strtr($config["changepassword/content"], array('{USERNAME}' =>  $profile["username"])),'MIME-Version: 1.0' . "\r\n".'Content-type: text/html; charset=utf-8' . "\r\n".'From: '.$config["mail/sender"].' <'.$config["mail/sendermail"].'>' . "\r\n");
+			$profile["pass"]=$_POST["np"];
+		}
+		$profile["realname"]=$_POST["rn"];
+		if(!$user->update($profile)){$mysqli->close(); die(isset($_POST["g"])?"A módosítás nem sikerült.":"-57");}
 		$mysqli->close();
 		die("1");
 		break;

@@ -78,7 +78,29 @@ if(!defined("_H_CONFIG_H_"))
 									A változtatás {CHANGE_DAY} nap múlva ({CHANGE_HOUR} óra) visszaállításra kerül, ha nem aktiválod.<br />
 									Utána a régi e-mail címed lesz újra az azonosítód.<br />
 									<br />
-									Ez egy autómágikusan generált üzenet, kérjük ne válaszolj rá.' //Új mail mail: {USERNAME}=Felhasználónév, {ACTIVATION_LINK}=Aktivációs link elérése, {ACTIVATION_CODE}=Aktivációs kód, {CHANGE_DAY}=Visszaállítási határidő (nap), {CHANGE_HOUR}=Visszaállítási határidő (óra)
+									Ez egy autómágikusan generált üzenet, kérjük ne válaszolj rá.', //Új mail mail: {USERNAME}=Felhasználónév, {ACTIVATION_LINK}=Aktivációs link elérése, {ACTIVATION_CODE}=Aktivációs kód, {CHANGE_DAY}=Visszaállítási határidő (nap), {CHANGE_HOUR}=Visszaállítási határidő (óra)
+
+			"newmail2/subject" => "E-mail cím változás.", //Új mail tárgya
+			"newmail2/content" => 'Kedves {USERNAME}!<br />
+									<br />
+									Elindult az e-mail változtatási folyamat.<br />
+									Ez az elektronikus levéllel tudod megerősíteni, hogy Te indítottad el.
+									Ahhoz, hogy megerősítsd a procedúrát illeszd az aktivációs kódot a megfelelő mezőbe,<br />
+									vagy csak egyszerűen kattints a hivatkozásra.<br />
+									Ezekután egy újabb levelet fogsz kapni az új postafiókodba.<br />
+									Itt ismételd meg ugyanezt a műveletet.
+									<hr>
+									Kód az aktivációhoz: <i>{ACTIVATION_CODE}</i><br />
+									(Az azonosító e-mail címed a jelenlegi cím.)<br />
+									Aktivációs linked: <a href="{ACTIVATION_LINK}" target="_blank" link="Aktiváció">Aktiváció</a><br />
+									(Ha a link nem működne, másold a böngésződ címsorába a következőt: {ACTIVATION_LINK} )<br />
+									<hr>
+									Ezt a levelet azért kaptad, mert valaki a Te e-mail címedet adta meg.<br />
+									Ha nem te voltál, akkor kérlek vedd fel a kapcsolatot a Support-al.<br />
+									A változtatás {CHANGE_DAY} nap múlva ({CHANGE_HOUR} óra) visszaállításra kerül, ha nem aktiválod.<br />
+									Utána a régi e-mail címed lesz újra az azonosítód.<br />
+									<br />
+									Ez egy autómágikusan generált üzenet, kérjük ne válaszolj rá.' //Új mail megerősítés mail: {USERNAME}=Felhasználónév, {ACTIVATION_LINK}=Aktivációs link elérése, {ACTIVATION_CODE}=Aktivációs kód, {CHANGE_DAY}=Visszaállítási határidő (nap), {CHANGE_HOUR}=Visszaállítási határidő (óra)
 		);
 
 	$mysqli=new mysqli($config["sql/host"], $config["sql/user"], $config["sql/pass"], $config["sql/database"]);

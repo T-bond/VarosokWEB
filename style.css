@@ -115,6 +115,15 @@ Menü
     color: #DC964B;
 	text-shadow: 1px 1px 5px #DC964B;
 }
+.waiting {
+	color: gray;
+}
+
+.info{
+	color: Red;
+	font-size: 12px;
+}
+
 /*
 Belso tartalom
 */
