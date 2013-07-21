@@ -22,6 +22,7 @@ foreach($users as $profile) {
 		$profile["status"] = 2;
 		$user->update($profile);
 	}
+}
 
 $users=$user->get("`status` = '2' AND `data` LIKE '%nmt:%' AND `data` LIKE '%newmail:%'");
 foreach($users as $profile) {
