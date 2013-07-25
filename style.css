@@ -1,5 +1,5 @@
 @charset UTF-8;
-html, body { height: 100%; }
+html, body { height: calc(100% - 4px); }
 body{
 	background-color: #784207;
 	background-image: url('back.png');
@@ -30,8 +30,8 @@ Alul az a fasz, lábrész vagy wut
 	background-image: url('footerskyline.png');
 	text-align: center;
 	position: relative;
-	margin-top: 0px; /* negative value of footer height */
-	height: 83px;
+	margin-top: -84px; /* negative value of footer height */
+	height: 84px;
 	clear: both; 
 	padding-bottom: 0px;
 }

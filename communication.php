@@ -216,7 +216,7 @@ switch((int)$_POST["t"]) {
 		$post = $Blog->getPostData("id",$_POST["i"]);
 		$User = $User->get("id='".$post["posterid"]."'");
 		$mysqli->close();
-		die('<div class="post"><span class="postTitle">'.$post["title"].'</span><span class="postDate">'.$post["date"].'</span><br>Írta: '.$User[0]["username"].'<div id="postPost">'.$post["post"].'</div></div><br><a href="javascript:void(0);" onClick="$(\'#Post\').hide(\'slow\');$(\'#NewsPost\').show(\'slow\'); $(\'#Komment\').hide(\'slow\');" title="Bezár">Bezár</a><br><a href="javascript:void(0);"  title="Elolvasás" onClick="$.get(\'communication.php\',{t:11,i:\''.$post["id"].'\'},function(r){$(\'#Komment\').show(\'slow\').html(r);});">Kommentek mutatása</a><br>');
+		die('<div class="post"><span class="postTitle">'.$post["title"].'</span><span class="postDate">'.$post["date"].'</span><br>Írta: '.$User[0]["username"].'<div id="postPost">'.strtr($post["post"], $_SMILE).'</div></div><br><a href="javascript:void(0);" onClick="$(\'#Post\').hide(\'slow\');$(\'#NewsPost\').show(\'slow\'); $(\'#Komment\').hide(\'slow\');" title="Bezár">Bezár</a><br><a href="javascript:void(0);"  title="Elolvasás" onClick="$.get(\'communication.php\',{t:11,i:\''.$post["id"].'\'},function(r){$(\'#Komment\').show(\'slow\').html(r);});">Kommentek mutatása</a><br>');
 		break;
 	case 11: //Komment betöltése
 		include("modules/blog.php");
@@ -240,16 +240,14 @@ switch((int)$_POST["t"]) {
 		include("modules/blog.php");
 		$Blog=CBlog::getInstance();
 		$dat[1] = $_SESSION["ID"];
-		$dat[2] = $_POST["t"];
+		$dat[2] = $_POST["ti"];
 		$dat[3] = $_POST["p"];
 		$dat[5] = $_POST["n"];
-		$post = $blog->postPost($dat);
+		$post = $Blog->postPost($dat);
 		$mysqli->close();
-		if($post){
-			die('Bejegyzés elküldve!');
-		}else{
-			die('Hiba!');
-		}
+		if(!$post)
+			die(isset($_POST["g"])?"A beküldés nem sikerült.":"-35.5");
+		die("1");
 		break;
 	case 13: //Komment küldése
 		if(!isset($_SESSION["ID"])){$mysqli->close(); die(isset($_POST["g"])?"Azonosítatlan felhasználó.":"-36");}
