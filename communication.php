@@ -11,7 +11,7 @@ switch((int)$_POST["t"]) {
 	case 1: //Belépés
 		if(!isset($_POST["m"]) || !isset($_POST["p"])){$mysqli->close(); die(isset($_POST["g"])?"Hiányzó paraméter!":"-3");} //Hiányzó paraméter (mail v jelszó)
 		if($_POST["m"]==="" or $_POST["p"]===""){$mysqli->close(); die(isset($_POST["g"])?"Az e-mail és/vagy a jelszó üres.":"-4");} //Üres mail vagy jelszó
-		if(!preg_match('/[a-zA-Z0-9_-]{3,32}/', $_POST["p"])){$mysqli->close(); die(isset($_POST["g"])?"A jelszó nincs titkosítva.":"-5");} //Nem md5 formátumú a jelszó
+		if(!preg_match('/^[a-zA-Z0-9_-]{3,32}/', $_POST["p"])){$mysqli->close(); die(isset($_POST["g"])?"A jelszó nincs titkosítva.":"-5");} //Nem md5 formátumú a jelszó
 		if(!filter_var($_POST["m"], FILTER_VALIDATE_EMAIL)){$mysqli->close(); die(isset($_POST["g"])?"Az e-mail cím érvénytelen.":"-6");} //Érvénytelen mail
 		$_QUERY=$mysqli->query("SELECT `id`, `data` , `status` FROM `".$config["users/table_escaped"]."` WHERE `mail`='".ensql($_POST["m"])."' AND `pass`='".ensql($_POST["p"])."'");
 		$_RESULT=$_QUERY->fetch_object();
@@ -68,7 +68,7 @@ switch((int)$_POST["t"]) {
 	case 3: //Aktiváció
 		if(!isset($_POST["a"]) || (!isset($_POST["i"]) && !isset($_POST["m"]))){$mysqli->close(); die(isset($_POST["g"])?"Hiányzó paraméter!":"-21");} //Hiányzó paraméter ((id és mail) v kód)
 		if($_POST["a"]=="" or ($_POST["i"]=="" and $_POST["m"]=="")){$mysqli->close(); die(isset($_POST["g"])?"Üres azonosító vagy aktivációs kód.":"-22");} //Üres (azonosító és mail) vagy aktivációs kód
-		if(!preg_match('/[a-zA-Z0-9_-]{3,32}/', $_POST["a"])){$mysqli->close(); die(isset($_POST["g"])?"Az aktivációs kód nem a megfelelő formátumú.":"-23");} //Nem md5 formátumú a kód
+		if(!preg_match('/^[a-zA-Z0-9_-]{3,32}/', $_POST["a"])){$mysqli->close(); die(isset($_POST["g"])?"Az aktivációs kód nem a megfelelő formátumú.":"-23");} //Nem md5 formátumú a kód
 		include("modules/users.php");
 		$users=CUsers::getInstance();
 		if($_POST["m"]!="" and (!isset($_POST["i"]) or $_POST["i"]==""))
@@ -256,9 +256,9 @@ switch((int)$_POST["t"]) {
 		if(!isset($_SESSION["ID"]) or $_SESSION["USER"]["status"]!=5){$mysqli->close(); die(isset($_POST["g"])?"Azonosítatlan felhasználó, vagy rossz felhasználói szint.":"-37");}
 		if(!isset($_POST["i"]) || !isset($_POST["u"]) || !isset($_POST["rn"]) || !isset($_POST["m"]) || !isset($_POST["p"]) || !isset($_POST["s"]) || !isset($_POST["des"])){$mysqli->close(); die(isset($_POST["g"])?"Hiányzó paraméter!":"-38");}
 		if($_POST["u"]==="" or $_POST["m"]===""){$mysqli->close(); die(isset($_POST["g"])?"Üres felhasználónév vagy e-mail.":"-39");} //Üres felhasználónév vagy mail
-		if($_POST["p"]!="" and !preg_match('/[a-zA-Z0-9_-]{3,32}/', $_POST["p"])){$mysqli->close(); die(isset($_POST["g"])?"A jelszó nincs titkosítva.":"-40");} //Nem md5 formátumú a jelszó
+		if($_POST["p"]!="" and !preg_match('/^[a-zA-Z0-9_-]{3,32}/', $_POST["p"])){$mysqli->close(); die(isset($_POST["g"])?"A jelszó nincs titkosítva.":"-40");} //Nem md5 formátumú a jelszó
 		if(strlen($_POST["u"])<3){$mysqli->close(); die(isset($_POST["g"])?"A felhasználónév túl rövid.":"-41");} //A név túl rövid
-		if(!preg_match('/[a-zA-Z0-9_-]{3,32}/', $_POST["u"])){$mysqli->close(); die(isset($_POST["g"])?"A név nem megfelelő.":"-42");} //Érvénytelen név
+		if(!preg_match('/^[a-zA-Z0-9_-]{3,32}/', $_POST["u"])){$mysqli->close(); die(isset($_POST["g"])?"A név nem megfelelő.":"-42");} //Érvénytelen név
 		if(!filter_var($_POST["m"], FILTER_VALIDATE_EMAIL)){$mysqli->close(); die(isset($_POST["g"])?"Az e-mail cím érvénytelen.":"-43");} //Érvénytelen mail
 		include("modules/users.php");
 		$user=CUsers::getInstance();
@@ -306,8 +306,8 @@ switch((int)$_POST["t"]) {
 	case 15: //Felhasználó profil módosítása (Felhasználó)
 		if(!isset($_SESSION["ID"]) or $_SESSION["USER"]["status"]==5){$mysqli->close(); die(isset($_POST["g"])?"Azonosítatlan felhasználó, vagy rossz felhasználói szint.":"-48");}
 		if($_POST["m"]==="" or $_POST["p"]==="" or $_POST["u"]===""){$mysqli->close(); die(isset($_POST["g"])?"A felhasználónév, e-mail és/vagy a jelszó üres.":"-49");} //Üres user, mail vagy jelszó
-		if(!preg_match('/[a-zA-Z0-9_-]{3,32}/', $_POST["p"])){$mysqli->close(); die(isset($_POST["g"])?"A jelszó nincs titkosítva.":"-50");} //Nem md5 formátumú a jelszó
-		if(!preg_match('/[a-zA-Z0-9_-]{3,32}/', $_POST["m"])){$mysqli->close(); die(isset($_POST["g"])?"A felhasználónév nem megfelelő.":"-51");} //Nem md5 formátumú a jelszó
+		if(!preg_match('/^[a-zA-Z0-9_-]{3,32}/', $_POST["p"])){$mysqli->close(); die(isset($_POST["g"])?"A jelszó nincs titkosítva.":"-50");} //Nem md5 formátumú a jelszó
+		if(!preg_match('/^[a-zA-Z0-9_-]{3,32}/', $_POST["m"])){$mysqli->close(); die(isset($_POST["g"])?"A felhasználónév nem megfelelő.":"-51");} //Nem md5 formátumú a jelszó
 		if(!filter_var($_POST["m"], FILTER_VALIDATE_EMAIL)){$mysqli->close(); die(isset($_POST["g"])?"Az e-mail cím érvénytelen.":"-52");} //Érvénytelen mail
 		include("modules/users.php");
 		$user=CUsers::getInstance();
